@@ -72,12 +72,13 @@ class ExistingCountries(pycountry.db.Database):
         # Prio 3: partial matches on country names
         for candidate in self:
             # Higher priority for a match on the common name
-            for v in [
-                candidate._fields.get("name"),
-                candidate._fields.get("official_name"),
-                candidate._fields.get("comment"),
-                *candidate._fields.get('translations', [])]:
-            ]:
+            possible_names = [
+                    candidate._fields.get('name'),
+                    candidate._fields.get('official_name'),
+                    candidate._fields.get("comment")
+                ]
+            possible_names += candidate._fields.get('translations', [])
+            for v in possible_names:
                 if v is None:
                     continue
                 v = remove_accents(v.lower())
