@@ -1,6 +1,7 @@
 # vim:fileencoding=utf-8
 """pycountry"""
 
+import gettext
 import os.path
 import unicodedata
 
@@ -75,6 +76,7 @@ class ExistingCountries(pycountry.db.Database):
                 candidate._fields.get("name"),
                 candidate._fields.get("official_name"),
                 candidate._fields.get("comment"),
+                *candidate._fields.get('translations', [])]:
             ]:
                 if v is None:
                     continue
@@ -170,7 +172,6 @@ class Subdivision(pycountry.db.Data):
 
 
 class Subdivisions(pycountry.db.Database):
-
     # Note: subdivisions can be hierarchical to other subdivisions. The
     # parent_code attribute is related to other subdivisons, *not*
     # the country!
@@ -217,3 +218,10 @@ language_families = LanguageFamilies(
 )
 
 scripts = Scripts(os.path.join(DATABASE_DIR, "iso15924.json"))
+
+
+def install_translations_for_countries(languages):
+    # Add translations to countries
+    langs = [gettext.translation('iso3166', LOCALES_DIR, languages=[lang]) for lang in languages]
+    for country in countries:
+        country.translations = [lang.gettext(country.name).lower() for lang in langs]

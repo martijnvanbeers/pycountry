@@ -246,3 +246,10 @@ def test_has_version_attribute():
     assert pycountry.__version__ != "n/a"
     assert len(pycountry.__version__) >= 5
     assert "." in pycountry.__version__
+
+
+def test_translations():
+    pycountry.install_translations_for_countries(['de', 'es', 'ar'])
+    assert pycountry.countries.lookup('frankreich').alpha_2 == 'FR'
+    assert pycountry.countries.lookup('Francia').alpha_2 == 'FR'
+    assert pycountry.countries.lookup('فرنسا').alpha_2 == 'FR'
