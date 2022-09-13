@@ -152,7 +152,7 @@ def test_language_families():
 
 def test_locales():
     german = gettext.translation(
-        "iso3166", pycountry.LOCALES_DIR, languages=["de"]
+        "iso3166-1", pycountry.db.LOCALES_DIR, languages=["de"]
     )
     german.install()
     assert _("Germany") == "Deutschland"
@@ -249,10 +249,9 @@ def test_has_version_attribute():
 
 
 def test_translations():
-    pycountry.install_translations_for_countries(['de', 'es', 'ar'])
-    assert pycountry.countries.lookup('frankreich').alpha_2 == 'FR'
-    assert pycountry.countries.lookup('Francia').alpha_2 == 'FR'
-    assert pycountry.countries.lookup('فرنسا').alpha_2 == 'FR'
+    assert pycountry.countries.lookup('frankreich', languages=["de"]).alpha_2 == 'FR'
+    assert pycountry.countries.lookup('Francia', languages=["es"]).alpha_2 == 'FR'
+    assert pycountry.countries.lookup('فرنسا', languages=["es", "ar"]).alpha_2 == 'FR'
 
     # test fuzzy
-    assert pycountry.countries.search_fuzzy('frankrei')[0].alpha_2 == 'FR'
+    assert pycountry.countries.search_fuzzy('frankrei', languages=["de"])[0].alpha_2 == 'FR'

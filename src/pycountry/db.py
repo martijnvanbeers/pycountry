@@ -1,12 +1,15 @@
 # vim:fileencoding=utf-8
 
 import json
+import gettext
 import logging
 import threading
 from io import open
+from .util import resource_filename
 
 logger = logging.getLogger("pycountry.db")
 
+LOCALES_DIR = resource_filename("pycountry", "locales")
 
 class Data:
     def __init__(self, **fields):
@@ -121,7 +124,7 @@ class Database:
             return default
 
     @lazy_load
-    def lookup(self, value):
+    def lookup(self, value, languages=None):
         if not isinstance(value, str):
             raise LookupError()
 
@@ -135,6 +138,9 @@ class Database:
             except LookupError:
                 pass
 
+        translations = None
+        if languages is not None:
+            translations = [gettext.translation('iso3166-1', LOCALES_DIR, languages=[lang]) for lang in languages]
         # Use non-indexed values now. Avoid going through indexed values.
         for candidate in self:
             for k in self.no_index:
@@ -147,4 +153,13 @@ class Database:
                 elif v.lower() == value:
                     return candidate
 
+            if translations is not None:
+                for k in ['name']:
+                    v = candidate._fields.get(k)
+                    for translation in translations:
+                        tv = translation.gettext(v)
+                        if tv is None:
+                            continue
+                        if tv.lower() == value:
+                            return candidate
         raise LookupError("Could not find a record for %r" % value)

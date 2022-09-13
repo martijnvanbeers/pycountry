@@ -6,24 +6,17 @@ import os.path
 import unicodedata
 
 import pycountry.db
+from .util import resource_filename
 
 try:
     import pkg_resources
-
-    resource_filename = pkg_resources.resource_filename
-except ImportError:
-
-    def resource_filename(package_or_requirement, resource_name):
-        return os.path.join(os.path.dirname(__file__), resource_name)
-
-else:
     try:
         __version__ = pkg_resources.get_distribution("pycountry").version
     except pkg_resources.DistributionNotFound:
         __version__ = "n/a"
+except ImportError:
+    __version__ = "n/a"
 
-
-LOCALES_DIR = resource_filename("pycountry", "locales")
 DATABASE_DIR = resource_filename("pycountry", "databases")
 
 
@@ -39,7 +32,7 @@ class ExistingCountries(pycountry.db.Database):
     data_class_name = "Country"
     root_key = "3166-1"
 
-    def search_fuzzy(self, query):
+    def search_fuzzy(self, query, languages=[]):
         query = remove_accents(query.strip().lower())
 
         # A country-code to points mapping for later sorting countries
@@ -52,7 +45,7 @@ class ExistingCountries(pycountry.db.Database):
 
         # Prio 1: exact matches on country names
         try:
-            add_result(self.lookup(query), 50)
+            add_result(self.lookup(query, languages=languages), 50)
         except LookupError:
             pass
 
@@ -70,6 +63,7 @@ class ExistingCountries(pycountry.db.Database):
                         break
 
         # Prio 3: partial matches on country names
+        translations = [gettext.translation('iso3166-1', pycountry.db.LOCALES_DIR, languages=[lang]) for lang in languages]
         for candidate in self:
             # Higher priority for a match on the common name
             possible_names = [
@@ -77,7 +71,8 @@ class ExistingCountries(pycountry.db.Database):
                     candidate._fields.get('official_name'),
                     candidate._fields.get("comment")
                 ]
-            possible_names += candidate._fields.get('translations', [])
+            possible_names.extend(list(filter(None, [t.gettext(candidate._fields.get('name')).lower() for t in translations])))
+            #possible_names.extend(list(filter(None, [t.gettext(candidate._fields.get('official_name')).lower() for t in translations])))
             for v in possible_names:
                 if v is None:
                     continue
@@ -219,12 +214,3 @@ language_families = LanguageFamilies(
 )
 
 scripts = Scripts(os.path.join(DATABASE_DIR, "iso15924.json"))
-
-
-def install_translations_for_countries(languages):
-    # Add translations to countries
-    langs = [gettext.translation('iso3166', LOCALES_DIR, languages=[lang])
-             for lang in languages]
-    for country in countries:
-        country.translations = [lang.gettext(country.name).lower()
-                                for lang in langs]

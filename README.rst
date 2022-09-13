@@ -262,24 +262,6 @@ Here is an example translating language names:
   >>> _('Germany')
   'Deutschland'
 
-It is also possible to install the translations directly into pycountry, to allow for searching using alternate languages
-
-.. code:: pycon
-
-  >>> import pycountry
-  >>> pycountry.install_translations_for_countries(['de']) # german
-  >>> pycountry.countries.lookup('frankreich')
-  Country(alpha_2='FR', alpha_3='FRA', name='France', ...)
-
-Multiple languages can be installed at once.
-**Note**: Every call for `install_translations_for_countries`
-overrides previous translations
-
-.. code:: pycon
-
-  >>> import pycountry
-  >>> pycountry.install_translations_for_countries(['es', 'ar', 'de'])
-
 Lookups
 -------
 
@@ -294,6 +276,24 @@ example:
 
 The search ends with the first match, which is returned.
 
+
+It is also possible to specify which languages to try in addition to English during lookup:
+
+.. code:: pycon
+
+  >>> import pycountry
+  >>> pycountry.countries.lookup("Frankreich", languages=["de"]) # german
+  Country(alpha_2='FR', alpha_3='FRA', name='France', ...)
+
+It is possible to specify multiple languages at once.
+
+And fuzzy search:
+
+.. code:: pycon
+
+  >>> import pycountry
+  >>> pycountry.countries.fuzzy_search("frankrei", languages=["nl", "de"]) # german
+  Country(alpha_2='FR', alpha_3='FRA', name='France', ...)
 
 PyInstaller Compatibility
 -------------------------
